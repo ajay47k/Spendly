@@ -33,16 +33,18 @@ python app.py                      # dev server, http://127.0.0.1:5001
 
 **The port is 5001, not Flask's default 5000** (set in the `app.run()` call at the bottom of `app.py`). Debug mode and the auto-reloader are on, so template and Python edits reload without a restart.
 
-Testing (pytest + pytest-flask are installed; **no tests exist yet**):
+Testing (pytest + pytest-flask):
 
 ```bash
 pytest                             # all
-pytest tests/test_auth.py          # one file
-pytest tests/test_auth.py::test_login_rejects_bad_password   # one test
+pytest tests/test_register.py      # one file
+pytest tests/test_register.py::test_password_is_hashed       # one test
 pytest -k "login"                  # by name pattern
 ```
 
-pytest-flask's `client` fixture only works if you define an `app` fixture in `conftest.py` returning the Flask instance; without it every test using `client` errors.
+`tests/conftest.py` already provides the two fixtures every later step needs: `temp_db` repoints `db.DB_PATH` at a `tmp_path` database, and `app` returns the Flask instance wired to it — which is what makes pytest-flask's `client` fixture work. Take `client` or `temp_db` as an argument; do not write your own.
+
+`app` imports `app.py` *inside* the fixture, not at module scope. `app.py` calls `init_db()` and `seed_db()` at import time, so importing it before `temp_db` has patched `DB_PATH` would create and seed the real `expense_tracker.db` as a side effect of running the tests.
 
 ## Architecture
 

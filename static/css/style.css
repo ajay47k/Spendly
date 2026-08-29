@@ -420,6 +420,18 @@ a { color: inherit; text-decoration: none; }
     margin-bottom: 1.25rem;
 }
 
+/* Same metrics as .auth-error so the two banners never shift the layout —
+   the border matches the background rather than inventing a new colour. */
+.auth-success {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-light);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
 .form-group { margin-bottom: 1.25rem; }
 
 .form-group label {

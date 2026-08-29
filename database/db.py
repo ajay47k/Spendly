@@ -127,3 +127,23 @@ def seed_db():
             )
     finally:
         conn.close()
+
+
+def create_user(name, email, password):
+    """Insert a user with a hashed password. Returns the new row id.
+
+    Raises sqlite3.IntegrityError when the email is already registered. The
+    UNIQUE constraint is the authority on that, so callers catch the error
+    rather than checking first — a "does this email exist?" SELECT would race
+    with a concurrent insert between the read and the write.
+    """
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                (name, email, generate_password_hash(password)),
+            )
+        return cursor.lastrowid
+    finally:
+        conn.close()
