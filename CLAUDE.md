@@ -10,8 +10,9 @@ Do not "fix" the unimplemented parts unless asked. The placeholder route bodies 
 
 | Step | Work |
 |---|---|
-| 1 | `database/db.py` — schema and connection |
-| 2–3 | Registration, login, sessions, logout |
+| 1 | `database/db.py` — schema and connection ✅ done |
+| 2 | Registration ✅ done |
+| 3 | Login, sessions, logout ✅ done |
 | 4 | Profile page |
 | 7–9 | Expense add / edit / delete |
 
@@ -62,7 +63,11 @@ Use the stdlib `sqlite3` and raw SQL. **Adding SQLAlchemy, Alembic, Flask-Login,
 
 ## Non-obvious constraints
 
-**The auth forms are wired to routes that reject them.** `login.html` and `register.html` both `POST`, but `/login` and `/register` are GET-only, so submitting returns **405**. Adding `methods=["GET", "POST"]` and the POST branch is part of Steps 2–3.
+**The two auth routes reject a bad submission with different status codes, on purpose.** `/register` answers **400** — the submitted fields were malformed. `/login` answers **401** — the fields were fine, the credentials were not. Both re-render their own template with an `error`; tests assert the specific code, so do not flatten them to one.
+
+**Login gives one message for every failure.** An unknown email and a wrong password return byte-identical responses (`LOGIN_ERROR` in `app.py`). Distinct messages would tell an attacker which addresses are registered.
+
+**`app.secret_key` reads `SPENDLY_SECRET_KEY` with a dev-only fallback literal.** Sessions are signed, not encrypted. Do not add `python-dotenv` to read a `.env` — the environment variable is the whole mechanism.
 
 **Never reference a non-existent endpoint with `url_for()` in `base.html`.** Because every page inherits it, a `url_for('terms')` for an unregistered endpoint raises `BuildError` and takes down the *entire site*, not just that link. Use a literal `href="/terms"` until the route exists. The footer's Terms and Privacy Policy links are currently literal hrefs for this reason, and both 404 until routes are added.
 

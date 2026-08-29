@@ -147,3 +147,18 @@ def create_user(name, email, password):
         return cursor.lastrowid
     finally:
         conn.close()
+
+
+def get_user_by_email(email):
+    """Return the user row for an address, or None when there is no such user.
+
+    Does no password checking of its own. The caller compares the hash, so that
+    a missing user and a wrong password can be answered identically.
+    """
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    finally:
+        conn.close()

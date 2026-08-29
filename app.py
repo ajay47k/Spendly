@@ -1,10 +1,18 @@
+import os
 import sqlite3
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash
 
-from database.db import create_user, get_db, init_db, seed_db
+from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
 
 app = Flask(__name__)
+
+# Session cookies are signed, not encrypted, and this key is what stops a user
+# editing their own. The literal is a development convenience; a real
+# deployment sets SPENDLY_SECRET_KEY. Not read from a .env — python-dotenv is
+# deliberately not a dependency.
+app.secret_key = os.environ.get("SPENDLY_SECRET_KEY", "dev-only-secret-key")
 
 # Make sure the schema and demo data exist before any route runs. Both calls
 # are idempotent, so the debug reloader running this twice is harmless.
@@ -14,6 +22,10 @@ with app.app_context():
 
 # Matches the "Min. 8 characters" placeholder on the registration form.
 MIN_PASSWORD_LENGTH = 8
+
+# One message for every failed sign-in. Saying "no account with that email"
+# would tell an attacker which addresses are registered.
+LOGIN_ERROR = "Incorrect email or password."
 
 
 # ------------------------------------------------------------------ #
@@ -82,19 +94,47 @@ def register():
     return redirect(url_for("login", registered=1))
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if request.method == "GET":
+        return render_template("login.html")
+
+    # Normalised exactly as /register normalises before inserting, so an
+    # account created as demo@spendly.com can be signed into as Demo@Spendly.com.
+    email = request.form.get("email", "").strip().lower()
+    # Not stripped — spaces are legitimate password characters.
+    password = request.form.get("password", "")
+
+    user = get_user_by_email(email)
+    # Unknown email and wrong password answer identically, down to the status
+    # code. check_password_hash, never ==: two hashes of one password differ
+    # by salt.
+    if user is None or not check_password_hash(user["password_hash"], password):
+        # 401 rather than /register's 400 — the form was well formed, the
+        # credentials were what was wrong.
+        return render_template("login.html", error=LOGIN_ERROR, email=email), 401
+
+    # Clear before setting, so each sign-in starts a fresh session rather than
+    # adopting whatever cookie the browser arrived with.
+    session.clear()
+    session["user_id"] = user["id"]
+    session["user_name"] = user["name"]
+    # Redirect rather than render: refreshing a rendered POST would re-submit
+    # the password. /profile is still Step 4's placeholder, which is fine.
+    return redirect(url_for("profile"))
+
+
+@app.route("/logout")
+def logout():
+    # clear(), not pop("user_id") — whatever later steps put in the session
+    # should not survive a sign-out either.
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/logout")
-def logout():
-    return "Logout — coming in Step 3"
-
 
 @app.route("/profile")
 def profile():
