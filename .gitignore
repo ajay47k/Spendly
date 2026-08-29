@@ -1,8 +1,10 @@
 venv/
 expense_tracker.db
 __pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 .env
 .DS_Store
 .claude/plans/
+.claude/settings.local.json

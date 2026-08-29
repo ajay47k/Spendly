@@ -1,6 +1,14 @@
 from flask import Flask, render_template
 
+from database.db import get_db, init_db, seed_db
+
 app = Flask(__name__)
+
+# Make sure the schema and demo data exist before any route runs. Both calls
+# are idempotent, so the debug reloader running this twice is harmless.
+with app.app_context():
+    init_db()
+    seed_db()
 
 
 # ------------------------------------------------------------------ #

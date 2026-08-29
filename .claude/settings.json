@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python app.py)",
+      "Bash(python -m pytest*)",
+      "Bash(pytest*)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(pip list*)",
+      "Bash(pip show *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git ls-remote*)",
+      "PowerShell(python app.py)",
+      "PowerShell(python -m pytest*)",
+      "PowerShell(pytest*)",
+      "PowerShell(pip install -r requirements.txt)",
+      "PowerShell(pip list*)",
+      "PowerShell(git status*)",
+      "PowerShell(git diff*)",
+      "PowerShell(git log*)"
+    ]
+  }
+}
